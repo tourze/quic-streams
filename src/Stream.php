@@ -109,7 +109,7 @@ abstract class Stream
         }
         
         // 检查流控制
-        if ($this->flowController && !$this->flowController->canReceive(strlen($data))) {
+        if ($this->flowController !== null && !$this->flowController->canReceive(strlen($data))) {
             throw new StreamException('Stream data limit exceeded', QuicError::FLOW_CONTROL_ERROR);
         }
         
