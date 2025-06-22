@@ -73,7 +73,7 @@ abstract class Stream
     
     /**
      * 发送数据
-     * 
+     *
      * @param string $data 要发送的数据
      * @param bool $fin 是否为最后一帧
      * @throws StreamException 流状态错误时抛出
@@ -96,7 +96,7 @@ abstract class Stream
     
     /**
      * 接收数据
-     * 
+     *
      * @param string $data 接收的数据
      * @param int $offset 数据偏移量
      * @param bool $fin 是否为最后一帧
