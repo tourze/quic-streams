@@ -8,7 +8,7 @@ use Tourze\QUIC\FlowControl\StreamFlowController;
 
 /**
  * 双向流实现
- * 
+ *
  * 支持发送和接收数据的QUIC流
  * 双向流ID为4n或4n+1的形式
  */

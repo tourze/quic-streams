@@ -9,7 +9,7 @@ use Tourze\QUIC\Core\Enum\StreamSendState;
 
 /**
  * 流状态机
- * 
+ *
  * 管理QUIC流的状态转换
  * 参考：RFC 9000 Section 3
  */

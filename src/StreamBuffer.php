@@ -6,7 +6,7 @@ namespace Tourze\QUIC\Streams;
 
 /**
  * 流数据缓冲区
- * 
+ *
  * 管理流的发送和接收缓冲区，处理数据的排序和组装
  */
 class StreamBuffer

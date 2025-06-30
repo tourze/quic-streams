@@ -8,10 +8,11 @@ use Tourze\QUIC\Core\Constants;
 use Tourze\QUIC\Core\Enum\QuicError;
 use Tourze\QUIC\Core\Enum\StreamType;
 use Tourze\QUIC\FlowControl\FlowControlManager;
+use Tourze\QUIC\Streams\Exception\StreamException;
 
 /**
  * 流管理器
- * 
+ *
  * 管理QUIC连接中的所有流，包括创建、销毁和状态管理
  * 参考：RFC 9000 Section 2 和 Section 19
  */

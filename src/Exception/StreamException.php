@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tourze\QUIC\Streams;
+namespace Tourze\QUIC\Streams\Exception;
 
 use Tourze\QUIC\Core\Enum\QuicError;
 
 /**
  * 流异常类
- * 
+ *
  * 处理QUIC流操作中的异常情况
  */
 class StreamException extends \Exception

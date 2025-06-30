@@ -9,10 +9,11 @@ use Tourze\QUIC\Core\Enum\StreamRecvState;
 use Tourze\QUIC\Core\Enum\StreamSendState;
 use Tourze\QUIC\Core\Enum\StreamType;
 use Tourze\QUIC\FlowControl\StreamFlowController;
+use Tourze\QUIC\Streams\Exception\StreamException;
 
 /**
  * QUIC 流基础类
- * 
+ *
  * 实现QUIC协议中的流概念，管理流的生命周期、状态和数据传输
  * 参考：RFC 9000 Section 2 和 Section 3
  */

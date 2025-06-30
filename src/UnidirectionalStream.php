@@ -8,7 +8,7 @@ use Tourze\QUIC\FlowControl\StreamFlowController;
 
 /**
  * 单向流实现
- * 
+ *
  * 只支持单向数据传输的QUIC流
  * 单向流ID为4n+2或4n+3的形式
  */
