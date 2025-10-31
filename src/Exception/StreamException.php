@@ -13,11 +13,8 @@ use Tourze\QUIC\Core\Enum\QuicError;
  */
 class StreamException extends \Exception
 {
-    private readonly QuicError $quicError;
-
-    public function __construct(string $message, QuicError $quicError, ?\Throwable $previous = null)
+    public function __construct(string $message, private readonly QuicError $quicError, ?\Throwable $previous = null)
     {
-        $this->quicError = $quicError;
         parent::__construct($message, $quicError->value, $previous);
     }
 
@@ -28,4 +25,4 @@ class StreamException extends \Exception
     {
         return $this->quicError;
     }
-} 
+}

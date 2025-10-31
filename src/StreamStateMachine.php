@@ -16,6 +16,7 @@ use Tourze\QUIC\Core\Enum\StreamSendState;
 class StreamStateMachine
 {
     private StreamSendState $sendState = StreamSendState::READY;
+
     private StreamRecvState $recvState = StreamRecvState::RECV;
 
     /**
@@ -23,25 +24,31 @@ class StreamStateMachine
      */
     public function transitionSend(StreamSendState $newState): bool
     {
-        return match ([$this->sendState, $newState]) {
+        $canTransition = match ([$this->sendState, $newState]) {
             // READY状态可以转换到SEND或RESET_SENT
-            [StreamSendState::READY, StreamSendState::SEND] => $this->setSendState($newState),
-            [StreamSendState::READY, StreamSendState::RESET_SENT] => $this->setSendState($newState),
+            [StreamSendState::READY, StreamSendState::SEND] => true,
+            [StreamSendState::READY, StreamSendState::RESET_SENT] => true,
 
             // SEND状态可以转换到DATA_SENT、RESET_SENT或RESET_RECVD
-            [StreamSendState::SEND, StreamSendState::DATA_SENT] => $this->setSendState($newState),
-            [StreamSendState::SEND, StreamSendState::RESET_SENT] => $this->setSendState($newState),
-            [StreamSendState::SEND, StreamSendState::RESET_RECVD] => $this->setSendState($newState),
+            [StreamSendState::SEND, StreamSendState::DATA_SENT] => true,
+            [StreamSendState::SEND, StreamSendState::RESET_SENT] => true,
+            [StreamSendState::SEND, StreamSendState::RESET_RECVD] => true,
 
             // DATA_SENT状态可以转换到RESET_RECVD
-            [StreamSendState::DATA_SENT, StreamSendState::RESET_RECVD] => $this->setSendState($newState),
+            [StreamSendState::DATA_SENT, StreamSendState::RESET_RECVD] => true,
 
             // RESET_SENT状态可以转换到RESET_RECVD
-            [StreamSendState::RESET_SENT, StreamSendState::RESET_RECVD] => $this->setSendState($newState),
+            [StreamSendState::RESET_SENT, StreamSendState::RESET_RECVD] => true,
 
             // 相同状态保持不变
             default => $this->sendState === $newState,
         };
+
+        if ($canTransition && $this->sendState !== $newState) {
+            $this->setSendState($newState);
+        }
+
+        return $canTransition;
     }
 
     /**
@@ -49,18 +56,24 @@ class StreamStateMachine
      */
     public function transitionRecv(StreamRecvState $newState): bool
     {
-        return match ([$this->recvState, $newState]) {
+        $canTransition = match ([$this->recvState, $newState]) {
             // RECV状态可以转换到SIZE_KNOWN或RESET_RECVD
-            [StreamRecvState::RECV, StreamRecvState::SIZE_KNOWN] => $this->setRecvState($newState),
-            [StreamRecvState::RECV, StreamRecvState::RESET_RECVD] => $this->setRecvState($newState),
+            [StreamRecvState::RECV, StreamRecvState::SIZE_KNOWN] => true,
+            [StreamRecvState::RECV, StreamRecvState::RESET_RECVD] => true,
 
             // SIZE_KNOWN状态可以转换到DATA_RECVD或RESET_RECVD
-            [StreamRecvState::SIZE_KNOWN, StreamRecvState::DATA_RECVD] => $this->setRecvState($newState),
-            [StreamRecvState::SIZE_KNOWN, StreamRecvState::RESET_RECVD] => $this->setRecvState($newState),
+            [StreamRecvState::SIZE_KNOWN, StreamRecvState::DATA_RECVD] => true,
+            [StreamRecvState::SIZE_KNOWN, StreamRecvState::RESET_RECVD] => true,
 
             // 相同状态保持不变
             default => $this->recvState === $newState,
         };
+
+        if ($canTransition && $this->recvState !== $newState) {
+            $this->setRecvState($newState);
+        }
+
+        return $canTransition;
     }
 
     /**
@@ -138,6 +151,7 @@ class StreamStateMachine
 
     /**
      * 获取状态摘要
+     * @return array{send_state: string, recv_state: string, can_send: bool, can_receive: bool, is_closed: bool, can_gc: bool}
      */
     public function getStateSummary(): array
     {
@@ -154,18 +168,16 @@ class StreamStateMachine
     /**
      * 设置发送状态
      */
-    private function setSendState(StreamSendState $state): bool
+    private function setSendState(StreamSendState $state): void
     {
         $this->sendState = $state;
-        return true;
     }
 
     /**
      * 设置接收状态
      */
-    private function setRecvState(StreamRecvState $state): bool
+    private function setRecvState(StreamRecvState $state): void
     {
         $this->recvState = $state;
-        return true;
     }
-} 
+}

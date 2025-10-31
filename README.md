@@ -1,23 +1,39 @@
 # QUIC Streams Package
 
+[English](README.md) | [中文](README.zh-CN.md)
+
+[![Latest Version](https://img.shields.io/packagist/v/tourze/quic-streams.svg?style=flat-square)](https://packagist.org/packages/tourze/quic-streams)
+[![License](https://img.shields.io/packagist/l/tourze/quic-streams.svg?style=flat-square)](https://github.com/tourze/quic-streams/blob/main/LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/tourze/quic-streams/phpunit.yml?style=flat-square)](https://github.com/tourze/quic-streams/actions)
+[![Code Coverage](https://img.shields.io/codecov/c/github/tourze/quic-streams.svg?style=flat-square)](https://codecov.io/gh/tourze/quic-streams)
+[![Quality Score](https://img.shields.io/scrutinizer/g/tourze/quic-streams.svg?style=flat-square)](https://scrutinizer-ci.com/g/tourze/quic-streams)
+[![Total Downloads](https://img.shields.io/packagist/dt/tourze/quic-streams.svg?style=flat-square)](https://packagist.org/packages/tourze/quic-streams)
+
 QUIC协议流管理实现包，提供完整的QUIC流生命周期管理功能。
 
-## 功能特性
+## Features
 
-- ✅ 双向流和单向流支持
-- ✅ 流状态机管理
-- ✅ 数据缓冲和排序
-- ✅ 流量控制集成
-- ✅ 异常错误处理
-- ✅ 内存优化的缓冲区管理
+- ✅ Bidirectional and unidirectional stream support
+- ✅ Stream state machine management
+- ✅ Data buffering and ordering
+- ✅ Flow control integration
+- ✅ Exception error handling
+- ✅ Memory-optimized buffer management
 
-## 安装
+## Installation
 
 ```bash
 composer require tourze/quic-streams
 ```
 
-## 基本使用
+## Requirements
+
+- PHP 8.1 or higher
+- tourze/quic-core
+- tourze/quic-flow-control
+- tourze/quic-frames
+
+## Quick Start
 
 ### 创建流管理器
 
@@ -99,7 +115,7 @@ $buffer->addRecvData('Received data', offset: 0);
 $recvData = $buffer->getRecvData();
 ```
 
-## 类结构
+## API Reference
 
 ### 核心类
 
@@ -120,7 +136,7 @@ $recvData = $buffer->getRecvData();
 - `StreamType::CLIENT_UNI` (2) - 客户端发起的单向流
 - `StreamType::SERVER_UNI` (3) - 服务器发起的单向流
 
-## 异常处理
+## Error Handling
 
 ```php
 use Tourze\QUIC\Streams\StreamException;
@@ -134,7 +150,7 @@ try {
 }
 ```
 
-## 测试
+## Testing
 
 ```bash
 # 运行单元测试
@@ -144,12 +160,16 @@ try {
 ./vendor/bin/phpstan analyse packages/quic-streams/src --level=max
 ```
 
-## 依赖关系
+## Dependencies
 
 - `tourze/quic-core` - QUIC核心定义
 - `tourze/quic-frames` - QUIC帧处理
 - `tourze/quic-flow-control` - 流量控制
 
-## 许可证
+## Contributing
 
-MIT License
+Please see [CONTRIBUTING.md](../../CONTRIBUTING.md) for details.
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE) for more information.

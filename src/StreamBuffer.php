@@ -11,15 +11,18 @@ namespace Tourze\QUIC\Streams;
  */
 class StreamBuffer
 {
+    /** @var array<int, string> */
     private array $sendBuffer = [];
-    private array $recvBuffer = [];
-    private int $sendOffset = 0;
-    private int $recvOffset = 0;
-    private int $maxBufferSize;
 
-    public function __construct(int $maxBufferSize = 1048576) // 1MB
+    /** @var array<int, string> */
+    private array $recvBuffer = [];
+
+    private int $sendOffset = 0;
+
+    private int $recvOffset = 0;
+
+    public function __construct(private readonly int $maxBufferSize = 1048576) // 1MB
     {
-        $this->maxBufferSize = $maxBufferSize;
     }
 
     /**
@@ -30,16 +33,17 @@ class StreamBuffer
         $offset = $this->sendOffset;
         $this->sendBuffer[$offset] = $data;
         $this->sendOffset += strlen($data);
-        
+
         return $offset;
     }
 
     /**
      * 获取发送数据
+     * @return array{offset: int, data: string, fin: bool}|null
      */
     public function getSendData(int $maxLength): ?array
     {
-        if (empty($this->sendBuffer)) {
+        if ([] === $this->sendBuffer) {
             return null;
         }
 
@@ -47,27 +51,26 @@ class StreamBuffer
         ksort($this->sendBuffer);
         $offset = array_key_first($this->sendBuffer);
         $data = $this->sendBuffer[$offset];
-        
+
         if (strlen($data) > $maxLength) {
             // 分片处理
             $chunk = substr($data, 0, $maxLength);
             $this->sendBuffer[$offset] = substr($data, $maxLength);
-            
+
             return [
                 'offset' => $offset,
                 'data' => $chunk,
                 'fin' => false,
             ];
-        } else {
-            // 完整数据
-            unset($this->sendBuffer[$offset]);
-            
-            return [
-                'offset' => $offset,
-                'data' => $data,
-                'fin' => empty($this->sendBuffer),
-            ];
         }
+        // 完整数据
+        unset($this->sendBuffer[$offset]);
+
+        return [
+            'offset' => $offset,
+            'data' => $data,
+            'fin' => [] === $this->sendBuffer,
+        ];
     }
 
     /**
@@ -82,6 +85,7 @@ class StreamBuffer
         }
 
         $this->recvBuffer[$offset] = $data;
+
         return true;
     }
 
@@ -90,13 +94,13 @@ class StreamBuffer
      */
     public function getRecvData(): ?string
     {
-        if (empty($this->recvBuffer)) {
+        if ([] === $this->recvBuffer) {
             return null;
         }
 
         ksort($this->recvBuffer);
         $result = '';
-        
+
         foreach ($this->recvBuffer as $offset => $data) {
             if ($offset === $this->recvOffset) {
                 $result .= $data;
@@ -107,7 +111,7 @@ class StreamBuffer
             }
         }
 
-        return empty($result) ? null : $result;
+        return '' === $result ? null : $result;
     }
 
     /**
@@ -115,7 +119,7 @@ class StreamBuffer
      */
     public function hasSendData(): bool
     {
-        return !empty($this->sendBuffer);
+        return [] !== $this->sendBuffer;
     }
 
     /**
@@ -123,13 +127,13 @@ class StreamBuffer
      */
     public function hasRecvData(): bool
     {
-        if (empty($this->recvBuffer)) {
+        if ([] === $this->recvBuffer) {
             return false;
         }
 
         ksort($this->recvBuffer);
         $firstOffset = array_key_first($this->recvBuffer);
-        
+
         return $firstOffset === $this->recvOffset;
     }
 
@@ -168,6 +172,7 @@ class StreamBuffer
 
     /**
      * 获取缓冲区统计信息
+     * @return array{send_buffer_chunks: int, send_buffer_size: int, recv_buffer_chunks: int, recv_buffer_size: int, send_offset: int, recv_offset: int, max_buffer_size: int}
      */
     public function getStats(): array
     {
@@ -188,6 +193,7 @@ class StreamBuffer
     public function isNearFull(float $threshold = 0.8): bool
     {
         $currentSize = $this->getRecvBufferSize();
+
         return ($currentSize / $this->maxBufferSize) >= $threshold;
     }
 
@@ -201,4 +207,4 @@ class StreamBuffer
         $this->sendOffset = 0;
         $this->recvOffset = 0;
     }
-} 
+}

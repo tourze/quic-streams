@@ -2,6 +2,13 @@
 
 [English](README.md) | 中文
 
+[![Latest Version](https://img.shields.io/packagist/v/tourze/quic-streams.svg?style=flat-square)](https://packagist.org/packages/tourze/quic-streams)
+[![License](https://img.shields.io/packagist/l/tourze/quic-streams.svg?style=flat-square)](https://github.com/tourze/quic-streams/blob/main/LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/tourze/quic-streams/phpunit.yml?style=flat-square)](https://github.com/tourze/quic-streams/actions)
+[![Code Coverage](https://img.shields.io/codecov/c/github/tourze/quic-streams.svg?style=flat-square)](https://codecov.io/gh/tourze/quic-streams)
+[![Quality Score](https://img.shields.io/scrutinizer/g/tourze/quic-streams.svg?style=flat-square)](https://scrutinizer-ci.com/g/tourze/quic-streams)
+[![Total Downloads](https://img.shields.io/packagist/dt/tourze/quic-streams.svg?style=flat-square)](https://packagist.org/packages/tourze/quic-streams)
+
 QUIC协议流管理实现包，提供完整的QUIC流生命周期管理功能。
 
 ## 功能特性
@@ -19,7 +26,12 @@ QUIC协议流管理实现包，提供完整的QUIC流生命周期管理功能。
 composer require tourze/quic-streams
 ```
 
-## 设计架构
+## 系统要求
+
+- PHP 8.1 或更高版本
+- tourze/quic-core
+- tourze/quic-flow-control
+- tourze/quic-frames
 
 本包遵循RFC 9000规范实现QUIC流管理，主要组件包括：
 
@@ -42,7 +54,7 @@ composer require tourze/quic-streams
 - `CLIENT_UNI` (2) - 客户端发起的单向流（4n+2）
 - `SERVER_UNI` (3) - 服务器发起的单向流（4n+3）
 
-## 使用示例
+## 快速开始
 
 ### 基本用法
 
@@ -161,6 +173,10 @@ echo "清理了 {$removedCount} 个流";
 - [RFC 9000](https://tools.ietf.org/html/rfc9000) - QUIC: A UDP-Based Multiplexed and Secure Transport
 - 特别是第2节（流的概念）和第3节（流状态）
 
+## 贡献指南
+
+请查看 [CONTRIBUTING.md](../../CONTRIBUTING.md) 获取详细信息。
+
 ## 许可证
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MIT 许可证。请查看 [LICENSE](LICENSE) 文件获取更多信息。

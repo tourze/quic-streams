@@ -2,30 +2,36 @@
 
 declare(strict_types=1);
 
-namespace Tourze\QUIC\Streams\Tests\Unit;
+namespace Tourze\QUIC\Streams\Tests;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\QUIC\Core\Enum\QuicError;
 use Tourze\QUIC\Core\Enum\StreamRecvState;
 use Tourze\QUIC\Core\Enum\StreamSendState;
 use Tourze\QUIC\Core\Enum\StreamType;
-use Tourze\QUIC\FlowControl\StreamFlowController;
+use Tourze\QUIC\FlowControl\StreamFlowControl;
 use Tourze\QUIC\Streams\Exception\StreamException;
 use Tourze\QUIC\Streams\Stream;
 
 /**
  * Stream 基类单元测试
+ *
+ * @internal
  */
+#[CoversClass(Stream::class)]
 final class StreamTest extends TestCase
 {
     private TestableStream $stream;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         $this->stream = new TestableStream(0);
     }
 
-    public function test_constructor_initializes_stream_correctly(): void
+    public function testConstructorInitializesStreamCorrectly(): void
     {
         $this->assertSame(0, $this->stream->getId());
         $this->assertSame(StreamType::CLIENT_BIDI, $this->stream->getType());
@@ -33,7 +39,7 @@ final class StreamTest extends TestCase
         $this->assertSame(StreamRecvState::RECV, $this->stream->getRecvState());
     }
 
-    public function test_different_stream_types(): void
+    public function testDifferentStreamTypes(): void
     {
         $clientUni = new TestableStream(2);
         $this->assertSame(StreamType::CLIENT_UNI, $clientUni->getType());
@@ -45,7 +51,7 @@ final class StreamTest extends TestCase
         $this->assertSame(StreamType::SERVER_BIDI, $serverBidi->getType());
     }
 
-    public function test_send_appends_data_to_buffer(): void
+    public function testSendAppendsDataToBuffer(): void
     {
         $data = 'Hello World';
         $this->stream->send($data);
@@ -55,7 +61,7 @@ final class StreamTest extends TestCase
         $this->assertSame(StreamSendState::SEND, $this->stream->getSendState());
     }
 
-    public function test_send_with_fin_sets_fin_flag(): void
+    public function testSendWithFinSetsFinFlag(): void
     {
         $data = '';
         $this->stream->send($data, true);
@@ -64,7 +70,7 @@ final class StreamTest extends TestCase
         $this->assertSame(StreamSendState::DATA_SENT, $this->stream->getSendState());
     }
 
-    public function test_send_throws_exception_when_not_ready(): void
+    public function testSendThrowsExceptionWhenNotReady(): void
     {
         $this->stream->reset();
 
@@ -75,7 +81,7 @@ final class StreamTest extends TestCase
         $this->stream->send('data');
     }
 
-    public function test_receive_stores_data_in_order(): void
+    public function testReceiveStoresDataInOrder(): void
     {
         $data1 = 'Hello';
         $data2 = ' World';
@@ -87,7 +93,7 @@ final class StreamTest extends TestCase
         $this->assertSame('Hello World', $receivedData);
     }
 
-    public function test_receive_handles_out_of_order_data(): void
+    public function testReceiveHandlesOutOfOrderData(): void
     {
         $data1 = 'World';
         $data2 = 'Hello ';
@@ -103,7 +109,7 @@ final class StreamTest extends TestCase
         $this->assertSame('Hello World', $receivedData);
     }
 
-    public function test_receive_with_fin_updates_state(): void
+    public function testReceiveWithFinUpdatesState(): void
     {
         $data = 'Final message';
         $this->stream->receive($data, 0, true);
@@ -113,7 +119,7 @@ final class StreamTest extends TestCase
         $this->assertTrue($this->stream->isStreamCompleted());
     }
 
-    public function test_receive_throws_exception_when_not_ready(): void
+    public function testReceiveThrowsExceptionWhenNotReady(): void
     {
         $this->stream->handleReset();
 
@@ -124,13 +130,17 @@ final class StreamTest extends TestCase
         $this->stream->receive('data', 0);
     }
 
-    public function test_receive_with_flow_control(): void
+    public function testReceiveWithFlowControl(): void
     {
-        $flowController = $this->createMock(StreamFlowController::class);
-        $flowController->expects($this->once())
-            ->method('canReceive')
-            ->with(5)
-            ->willReturn(false);
+        // 使用匿名类替代 Mock 以符合静态分析要求
+        // 创建一个自定义的流控制器，拒绝接收5字节的数据
+        $flowController = new class(0) extends StreamFlowControl {
+            public function canReceive(int $bytes): bool
+            {
+                // 对于5字节数据返回false，模拟流控制限制
+                return 5 !== $bytes;
+            }
+        };
 
         $stream = new TestableStream(0, $flowController);
 
@@ -141,7 +151,7 @@ final class StreamTest extends TestCase
         $stream->receive('Hello', 0);
     }
 
-    public function test_reset_updates_state(): void
+    public function testResetUpdatesState(): void
     {
         $this->stream->send('Some data');
         $this->stream->reset();
@@ -150,7 +160,7 @@ final class StreamTest extends TestCase
         $this->assertSame('', $this->stream->getSendBuffer());
     }
 
-    public function test_handle_reset_updates_both_states(): void
+    public function testHandleResetUpdatesBothStates(): void
     {
         $this->stream->send('Some data');
         $this->stream->receive('Response', 0);
@@ -161,49 +171,5 @@ final class StreamTest extends TestCase
         $this->assertSame('', $this->stream->getSendBuffer());
         // 注意：handleReset 不会清除已处理的数据，只清除缓冲区
         $this->assertSame('Response', $this->stream->getReceivedData());
-    }
-}
-
-/**
- * 可测试的 Stream 具体实现
- */
-class TestableStream extends Stream
-{
-    private string $receivedData = '';
-    private bool $streamCompleted = false;
-
-    protected function onDataReceived(string $data): void
-    {
-        $this->receivedData .= $data;
-    }
-
-    protected function onStreamCompleted(): void
-    {
-        $this->streamCompleted = true;
-    }
-
-    public function getSendBuffer(): string
-    {
-        return $this->sendBuffer;
-    }
-
-    public function getReceivedData(): string
-    {
-        return $this->receivedData;
-    }
-
-    public function isFinSent(): bool
-    {
-        return $this->finSent;
-    }
-
-    public function isFinReceived(): bool
-    {
-        return $this->finReceived;
-    }
-
-    public function isStreamCompleted(): bool
-    {
-        return $this->streamCompleted;
     }
 }

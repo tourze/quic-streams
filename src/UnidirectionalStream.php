@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tourze\QUIC\Streams;
 
-use Tourze\QUIC\FlowControl\StreamFlowController;
+use Tourze\QUIC\FlowControl\StreamFlowControl;
 
 /**
  * 单向流实现
@@ -14,16 +14,19 @@ use Tourze\QUIC\FlowControl\StreamFlowController;
  */
 class UnidirectionalStream extends Stream
 {
+    /** @var array<int, array{data: string, timestamp: float, length: int}> */
     private array $receivedDataBuffer = [];
+
     private bool $streamCompleted = false;
 
-    public function __construct(int $id, ?StreamFlowController $flowController = null)
+    public function __construct(int $id, ?StreamFlowControl $flowController = null)
     {
         parent::__construct($id, $flowController);
     }
 
     /**
      * 获取接收的数据缓冲区
+     * @return array<int, array{data: string, timestamp: float, length: int}>
      */
     public function getReceivedData(): array
     {
@@ -68,6 +71,7 @@ class UnidirectionalStream extends Stream
 
     /**
      * 获取统计信息
+     * @return array{id: int, type: string, send_state: string, recv_state: string, total_received: int, send_buffer_size: int, received_chunks: int, completed: bool}
      */
     public function getStats(): array
     {
@@ -85,4 +89,4 @@ class UnidirectionalStream extends Stream
             'completed' => $this->streamCompleted,
         ];
     }
-} 
+}

@@ -20,24 +20,18 @@ class StreamManager
 {
     /** @var array<int, Stream> */
     private array $streams = [];
-    
+
     /** @var array<int, int> 下一个可用的流ID */
     private array $nextStreamIds = [];
-    
+
     /** @var array<int, int> 最大流数量限制 */
     private array $maxStreams = [];
-    
-    private bool $isServer;
-    private ?FlowControlManager $flowControlManager;
 
-    public function __construct(bool $isServer = false, ?FlowControlManager $flowControlManager = null)
+    public function __construct(private readonly bool $isServer = false, private readonly ?FlowControlManager $flowControlManager = null)
     {
-        $this->isServer = $isServer;
-        $this->flowControlManager = $flowControlManager;
-        
         // 初始化流ID
         $this->initializeStreamIds();
-        
+
         // 设置默认流限制
         $this->maxStreams = [
             StreamType::CLIENT_BIDI->value => Constants::DEFAULT_MAX_STREAMS_BIDI,
@@ -53,22 +47,21 @@ class StreamManager
     public function createStream(StreamType $type): Stream
     {
         $streamId = $this->getNextStreamId($type);
-        
+
         // 检查流数量限制
         if ($this->getStreamCount($type) >= $this->maxStreams[$type->value]) {
             throw new StreamException('Stream limit exceeded', QuicError::STREAM_LIMIT_ERROR);
         }
 
         $flowController = $this->flowControlManager?->createStream($streamId);
-        
+
         $stream = match ($type) {
-            StreamType::CLIENT_BIDI, StreamType::SERVER_BIDI => 
-                new BidirectionalStream($streamId, $flowController),
-            StreamType::CLIENT_UNI, StreamType::SERVER_UNI => 
-                new UnidirectionalStream($streamId, $flowController),
+            StreamType::CLIENT_BIDI, StreamType::SERVER_BIDI => new BidirectionalStream($streamId, $flowController),
+            StreamType::CLIENT_UNI, StreamType::SERVER_UNI => new UnidirectionalStream($streamId, $flowController),
         };
 
         $this->streams[$streamId] = $stream;
+
         return $stream;
     }
 
@@ -90,22 +83,21 @@ class StreamManager
         }
 
         $type = StreamType::fromStreamId($streamId);
-        
+
         // 验证流ID是否有效
         if (!$this->isValidStreamId($streamId, $type)) {
             throw new StreamException('Invalid stream ID', QuicError::STREAM_STATE_ERROR);
         }
 
         $flowController = $this->flowControlManager?->createStream($streamId);
-        
+
         $stream = match ($type) {
-            StreamType::CLIENT_BIDI, StreamType::SERVER_BIDI => 
-                new BidirectionalStream($streamId, $flowController),
-            StreamType::CLIENT_UNI, StreamType::SERVER_UNI => 
-                new UnidirectionalStream($streamId, $flowController),
+            StreamType::CLIENT_BIDI, StreamType::SERVER_BIDI => new BidirectionalStream($streamId, $flowController),
+            StreamType::CLIENT_UNI, StreamType::SERVER_UNI => new UnidirectionalStream($streamId, $flowController),
         };
 
         $this->streams[$streamId] = $stream;
+
         return $stream;
     }
 
@@ -118,13 +110,16 @@ class StreamManager
             // 清理流控制器
             $this->flowControlManager?->closeStream($streamId);
             unset($this->streams[$streamId]);
+
             return true;
         }
+
         return false;
     }
 
     /**
      * 获取所有流
+     * @return array<int, Stream>
      */
     public function getAllStreams(): array
     {
@@ -133,10 +128,11 @@ class StreamManager
 
     /**
      * 获取指定类型的流
+     * @return array<int, Stream>
      */
     public function getStreamsByType(StreamType $type): array
     {
-        return array_filter($this->streams, fn(Stream $stream) => $stream->getType() === $type);
+        return array_filter($this->streams, fn (Stream $stream) => $stream->getType() === $type);
     }
 
     /**
@@ -144,10 +140,10 @@ class StreamManager
      */
     public function getStreamCount(?StreamType $type = null): int
     {
-        if ($type === null) {
+        if (null === $type) {
             return count($this->streams);
         }
-        
+
         return count($this->getStreamsByType($type));
     }
 
@@ -173,7 +169,7 @@ class StreamManager
     public function garbageCollect(): int
     {
         $removedCount = 0;
-        
+
         foreach ($this->streams as $streamId => $stream) {
             // 检查流是否可以被清理
             $canGC = match (true) {
@@ -181,19 +177,20 @@ class StreamManager
                 $stream instanceof UnidirectionalStream => $stream->isCompleted(),
                 default => false,
             };
-            
+
             if ($canGC) {
                 $this->flowControlManager?->closeStream($streamId);
                 unset($this->streams[$streamId]);
-                $removedCount++;
+                ++$removedCount;
             }
         }
-        
+
         return $removedCount;
     }
 
     /**
      * 获取管理器统计信息
+     * @return array{total_streams: int, streams_by_type: array<string, int>, next_stream_ids: array<int, int>, max_streams: array<int, int>, is_server: bool}
      */
     public function getStats(): array
     {
@@ -240,7 +237,7 @@ class StreamManager
         } else {
             $this->nextStreamIds = [
                 StreamType::CLIENT_BIDI->value => 0,  // 客户端发起的双向流
-                StreamType::SERVER_BIDI->value => 1,  // 服务器发起的双向流  
+                StreamType::SERVER_BIDI->value => 1,  // 服务器发起的双向流
                 StreamType::CLIENT_UNI->value => 2,   // 客户端发起的单向流
                 StreamType::SERVER_UNI->value => 3,   // 服务器发起的单向流
             ];
@@ -254,6 +251,7 @@ class StreamManager
     {
         $streamId = $this->nextStreamIds[$type->value];
         $this->nextStreamIds[$type->value] += 4; // 流ID间隔为4
+
         return $streamId;
     }
 
@@ -271,4 +269,4 @@ class StreamManager
         // 检查流ID是否在有效范围内
         return $streamId >= 0 && $streamId <= Constants::MAX_STREAM_ID;
     }
-} 
+}
